@@ -1,5 +1,5 @@
 from torchtext import data
-from torchtext.vocab import GloVe
+from torchtext.vocab import GloVe, FastText
 
 from datasets import WikiSyntheticGeneral
 
@@ -43,6 +43,8 @@ def load_dataset(dataset_name='WikiSyntheticGeneral', splits=None, tokenize_func
     emb_func = None
     if embedding_func == 'glove':
         emb_func = GloVe(name='6B', dim=300)
+    elif embedding_func == 'fasttext':
+        emb_func = FastText(language='en')
 
     # TODO: use pre-built vocab files instead??
     text_field.build_vocab(dataset.text, vectors=emb_func)

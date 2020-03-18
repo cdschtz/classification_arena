@@ -121,13 +121,12 @@ def evaluate_model(model, val_iter, loss_fn, batch_size):
     return eval_loss / len(val_iter), eval_acc / len(val_iter)
 
 
-def run(model_name='rnn'):
+def run(model_name='rnn', batch_size=32, learn_rate=1e-3, embedding_fn='glove'):
     dataset_name = "WikiSyntheticGeneral"
     splits = [0.7, 0.15, 0.15]
     tokenize_fn = 'split'
-    embedding_fn = 'glove'
+    embedding_fn = embedding_fn
     vocabulary = 'built'
-    batch_size = 32
     hidden_size = 256
     vocab_size, word_embeddings, iters, sizes = load_data. \
         load_dataset(dataset_name=dataset_name, splits=splits, tokenize_func=tokenize_fn, embedding_func=embedding_fn,
@@ -144,7 +143,7 @@ def run(model_name='rnn'):
 
     num_epochs = 3
     loss_function = F.cross_entropy
-    learning_rate = 1e-3  # adam default: 1e-3, proposed: 2e-5
+    learning_rate = learn_rate  # adam default: 1e-3, proposed: 2e-5
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate)
     acc_info, loss_info, graph_data, time_info = train_model(
         model, iters, num_epochs, batch_size, loss_function, optimizer, verbose=True
@@ -179,7 +178,10 @@ def run_all():
     from utils import ALL_CONFIGURATIONS
 
     for model_name in ALL_CONFIGURATIONS['model_names']:
-        run(model_name)
+        for batch_size in ALL_CONFIGURATIONS['batch_sizes']:
+            for learn_rate in ALL_CONFIGURATIONS['learn_rates']:
+                for embedding_fn in ALL_CONFIGURATIONS['embedding_functions']:
+                    run(model_name, batch_size, learn_rate, embedding_fn)
 
 
 if __name__ == '__main__':
