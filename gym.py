@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 
 import load_data
-from models.category_2 import RNN, LSTMClassifier
+from models.category_2 import RNN, LSTMClassifier, CNN, SelfAttention
 from utils import DEVICE, clip_gradient, plot_train_data, write_results
 
 
@@ -20,9 +20,26 @@ def get_model(name, model_config):
         return RNN(batch_size, output_size, hidden_size, vocab_size, embedding_length, word_embeddings)
     elif name == 'lstm':
         return LSTMClassifier(batch_size, output_size, hidden_size, vocab_size, embedding_length, word_embeddings)
+    elif name == 'cnn':
+        in_channels = 1
+        # TODO: the vars below are initialized with random weights, I have to do more research to look
+        # TODO: for adequate initialization values
+        # START OF RANDOM VARIABLES
+        out_channels = 6
+        kernel_heights = [1, 4, 9]
+        stride = 1
+        padding = 0
+        keep_probab = 0.9  # for dropout
+        # END OF RANDOM VARIABLES
+        return CNN(batch_size, output_size, in_channels, out_channels, kernel_heights, stride, padding,
+                   keep_probab, vocab_size, embedding_length, word_embeddings)
+    elif name == 'self_attention':
+        return SelfAttention(batch_size, output_size, hidden_size, vocab_size, embedding_length, word_embeddings)
+    else:
+        raise ValueError(f'Error: Model name {name} is not supported.')
 
 
-def train_model(model, iters, num_epochs, batch_size, loss_fn, optim, test=False):
+def train_model(model, iters, num_epochs, batch_size, loss_fn, optim, test=False, verbose=False):
     start_time = datetime.datetime.now()
     time_info = {"start": start_time.isoformat(timespec='seconds')}
 
@@ -31,6 +48,9 @@ def train_model(model, iters, num_epochs, batch_size, loss_fn, optim, test=False
     train_iter, val_iter, test_iter = iters
 
     for epoch in range(num_epochs):
+        if verbose:
+            print(f"Started epoch {epoch + 1:02}/{num_epochs:02} "
+                  f"at {datetime.datetime.now().isoformat(timespec='seconds')}")
         total_epoch_loss = 0
         total_epoch_acc = 0
 
@@ -57,6 +77,9 @@ def train_model(model, iters, num_epochs, batch_size, loss_fn, optim, test=False
             total_epoch_loss += loss.item()
             total_epoch_acc += acc.item()
 
+        if verbose:
+            print(f"Finished epoch {epoch + 1:02}/{num_epochs:02} "
+                  f"at {datetime.datetime.now().isoformat(timespec='seconds')}")
         train_loss = total_epoch_loss / len(train_iter)
         train_acc = total_epoch_acc / len(train_iter)
 
@@ -79,7 +102,7 @@ def train_model(model, iters, num_epochs, batch_size, loss_fn, optim, test=False
 
 
 def evaluate_model(model, val_iter, loss_fn, batch_size):
-    loss = acc = 0.0
+    eval_loss = eval_acc = 0.0
     model.eval()
     with torch.no_grad():
         for idx, batch in enumerate(val_iter):
@@ -91,11 +114,11 @@ def evaluate_model(model, val_iter, loss_fn, batch_size):
             prediction = model(text)
             loss = loss_fn(prediction, target)
             num_corrects = (torch.max(prediction, 1)[1].view(target.size()).data == target.data).sum()
-            acc = 100.0 * num_corrects/len(batch)
-            loss += loss.item()
-            acc += acc.item()
+            acc = 100.0 * num_corrects / len(batch)
+            eval_loss += loss.item()
+            eval_acc += acc.item()
 
-    return loss/len(val_iter), acc/len(val_iter)
+    return eval_loss / len(val_iter), eval_acc / len(val_iter)
 
 
 def run():
@@ -106,18 +129,18 @@ def run():
     vocabulary = 'built'
     batch_size = 32
     hidden_size = 256
-    vocab_size, word_embeddings, iters, sizes = load_data.\
+    vocab_size, word_embeddings, iters, sizes = load_data. \
         load_dataset(dataset_name=dataset_name, splits=splits, tokenize_func=tokenize_fn, embedding_func=embedding_fn,
                      batch_size=batch_size)
 
-    model_name = 'lstm'
+    model_name = 'rnn'
     model_config = {
         "word_embeddings": word_embeddings,
         "vocab_size": vocab_size,
         "batch_size": batch_size,
         "hidden_size": hidden_size
     }
-    model = get_model('rnn', model_config)
+    model = get_model(model_name, model_config)
     model.to(DEVICE)
 
     num_epochs = 3
@@ -125,7 +148,7 @@ def run():
     learning_rate = 1e-3  # adam default: 1e-3, proposed: 2e-5
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate)
     acc_info, loss_info, graph_data, time_info = train_model(
-        model, iters, num_epochs, batch_size, loss_function, optimizer
+        model, iters, num_epochs, batch_size, loss_function, optimizer, verbose=True
     )
     # plot_train_data(losses[::10], accuracies[::10])
 
