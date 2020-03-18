@@ -10,8 +10,6 @@ Benchmark different classification methods on the task of detecting syntheticall
 
 * CNN
 * LSTM
-* LSTM_Attn
-* RCNN
 * RNN
 * selfAttention
 
