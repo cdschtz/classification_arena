@@ -54,19 +54,10 @@ def train_model(model, iters, num_epochs, batch_size, loss_fn, optim, test=False
         total_epoch_loss = 0
         total_epoch_acc = 0
 
-        print('DEBUG: before model.train()')
-        model.to(DEVICE)
         model.train()
-        print('DEBUG: before enumerate(train_iter)')
         for idx, batch in enumerate(train_iter):
-            print('DEBUG: before conversion of text, target')
-            print('text device: ' + batch.text.device.type)
-            print('label device: ' + batch.label.device.type)
             text = batch.text.to(DEVICE)
             target = batch.label.to(DEVICE)
-            print('DEBUG: after conversion of text, target')
-            print('text device: ' + batch.text.device.type)
-            print('label device: ' + batch.label.device.type)
             if text.shape[0] is not batch_size:
                 continue
 
