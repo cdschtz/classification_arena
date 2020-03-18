@@ -54,10 +54,19 @@ def train_model(model, iters, num_epochs, batch_size, loss_fn, optim, test=False
         total_epoch_loss = 0
         total_epoch_acc = 0
 
+        print('DEBUG: before model.train()')
+        model.to(DEVICE)
         model.train()
+        print('DEBUG: before enumerate(train_iter)')
         for idx, batch in enumerate(train_iter):
+            print('DEBUG: before conversion of text, target')
+            print('text device: ' + batch.text.device.type)
+            print('label device: ' + batch.label.device.type)
             text = batch.text.to(DEVICE)
             target = batch.label.to(DEVICE)
+            print('DEBUG: after conversion of text, target')
+            print('text device: ' + batch.text.device.type)
+            print('label device: ' + batch.label.device.type)
             if text.shape[0] is not batch_size:
                 continue
 
@@ -121,7 +130,7 @@ def evaluate_model(model, val_iter, loss_fn, batch_size):
     return eval_loss / len(val_iter), eval_acc / len(val_iter)
 
 
-def run():
+def run(model_name='rnn'):
     dataset_name = "WikiSyntheticGeneral"
     splits = [0.7, 0.15, 0.15]
     tokenize_fn = 'split'
@@ -133,7 +142,6 @@ def run():
         load_dataset(dataset_name=dataset_name, splits=splits, tokenize_func=tokenize_fn, embedding_func=embedding_fn,
                      batch_size=batch_size)
 
-    model_name = 'rnn'
     model_config = {
         "word_embeddings": word_embeddings,
         "vocab_size": vocab_size,
@@ -177,7 +185,10 @@ def run():
 
 
 def run_all():
-    pass
+    from utils import ALL_CONFIGURATIONS
+
+    for model_name in ALL_CONFIGURATIONS['model_names']:
+        run(model_name)
 
 
 if __name__ == '__main__':

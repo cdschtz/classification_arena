@@ -5,8 +5,9 @@ import torch
 DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 ALL_CONFIGURATIONS = {
-    "model_name": ('lstm', 'rnn'),
-    "dataset_name": ('WikiSyntheticGeneral', 'WikiSyntheticSophisticated', 'WikiNews')
+    "model_names": ('lstm', 'rnn', 'cnn', 'self_attention'),
+    "dataset_names": ('WikiSyntheticGeneral', 'WikiSyntheticSophisticated', 'WikiNews'),
+    "batch_sizes": (32, 64, 128, 256)
 }
 
 
