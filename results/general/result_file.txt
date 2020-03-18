@@ -1,0 +1,33 @@
+Filename: 2020-03-17T17:51:00.txt
+
+Model Type: LSTM
+Datset: WikiSyntheticGeneral
+
+
+SCORES
+Train Acc	|Val Acc	|Test Acc
+74.64		|74.48		|78.26
+
+
+TIME
+Device 	|Duration	|Start		     |End
+cpu	|00:45:17	|2020-03-18T09:08:12 |2020-03-18T09:10:12
+
+
+SAMPLES
+Total	|Training	|Validation	|Test
+412000	|288400 (0.7)	|61800 (0.15)	|61800 (0.15)
+
+
+DATA PROCESS CONFIGURATION
+Tokenizer	|Embeddings	|Vocabulary
+SpaCy		|GloVe		|built
+
+
+TRAIN CONFIGURATION
+Epochs		|Learn Rate	|Batch Size	|Hidden Size
+10		|2e-5		|32		|256
+
+
+GRAPH DATA
+{"loss": [0.6691, 0.5623, 0.544, 0.3820], "acc": [53.12, 46.88, 40.62]}
