@@ -4,8 +4,8 @@ from torchtext.vocab import GloVe
 from datasets import WikiSyntheticGeneral
 
 
-def load_dataset(dataset_name='WikiSyntheticGeneral', splits=None, tokenize_func=lambda x: x.split(),
-                 embedding_func='glove'):
+def load_dataset(dataset_name='WikiSyntheticGeneral', splits=None, tokenize_func='split',
+                 embedding_func='glove', batch_size=32):
     """
     Arguments:
         dataset_name: which dataset to use, for training (and testing) use WikiSyntheticGeneral,
@@ -13,9 +13,17 @@ def load_dataset(dataset_name='WikiSyntheticGeneral', splits=None, tokenize_func
         splits: ratio of training, test and validation split, e.g. [0.7, 0.15, 0.15]
         tokenize_func: function to use for tokenization, e.g. split() or 'spacy'
         embedding_func: which embedding function to use, can be 'glove' or 'fasttext'
+        batch_size: int which denotes the size of each batch
     """
+    if tokenize_func == 'split':
+        def tokenizer(x): return x.split()
+    elif tokenize_func == 'spacy':
+        tokenizer = 'spacy'
+    else:
+        raise ValueError(f"Error: Tokenizer function {tokenize_func} not supported")
+
     # text_fields will receive (batches of) Strings of text
-    text_field = data.Field(sequential=True, tokenize=tokenize_func, lower=True, batch_first=True)
+    text_field = data.Field(sequential=True, tokenize=tokenizer, lower=True, batch_first=True)
     # label_fields will receive the (numerical) labels of data points (e.g. 0, 1), i.e. use_vocab=False
     label_field = data.LabelField(use_vocab=False)
 
@@ -27,8 +35,10 @@ def load_dataset(dataset_name='WikiSyntheticGeneral', splits=None, tokenize_func
     if splits is None:
         splits = [0.7, 0.15, 0.15]
     else:
-        splits = [0.7, 0.15, 0.15]
+        splits = splits
     train_data, test_data, valid_data = dataset.split(splits)
+    train_size, val_size, test_size = len(train_data), len(valid_data), len(test_data)
+    sizes = (train_size + val_size + test_size, train_size, val_size, test_size)
 
     emb_func = None
     if embedding_func == 'glove':
@@ -39,13 +49,12 @@ def load_dataset(dataset_name='WikiSyntheticGeneral', splits=None, tokenize_func
     del dataset
 
     word_embeddings = text_field.vocab.vectors
-    print("Length of Text Vocabulary: " + str(len(text_field.vocab)))
-    print("Vector size of Text Vocabulary: ", text_field.vocab.vectors.size())
 
     train_iter, test_iter, valid_iter = data.Iterator.splits(
-        (train_data, test_data, valid_data), batch_size=32, sort_key=lambda x: len(x.text), repeat=False, shuffle=True
+        (train_data, test_data, valid_data), batch_size=batch_size, sort_key=lambda x: len(x.text), repeat=False, shuffle=True
     )
+    iters = (train_iter, valid_iter, test_iter)
 
     vocab_size = len(text_field.vocab)
 
-    return text_field, vocab_size, word_embeddings, train_iter, test_iter, valid_iter
+    return vocab_size, word_embeddings, iters, sizes
