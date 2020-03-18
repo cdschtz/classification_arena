@@ -26,12 +26,10 @@ class RNN(nn.Module):
         input = input.permute(1, 0, 2)
         if batch_size is None:
             h_0 = torch.zeros(4, self.batch_size, self.hidden_size)  # 4 = num_layers*num_directions
-            if torch.cuda.is_available():
-                h_0.cuda()
+            h_0.to(DEVICE)
         else:
             h_0 = torch.zeros(4, batch_size, self.hidden_size)
-            if torch.cuda.is_available():
-                h_0.cuda()
+            h_0.to(DEVICE)
 
         output, h_n = self.rnn(input, h_0)
         h_n = h_n.permute(1, 0, 2)  # h_n.size() = (batch_size, 4, hidden_size)
