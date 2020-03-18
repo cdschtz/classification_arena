@@ -10,7 +10,7 @@ ALL_CONFIGURATIONS = {
 }
 
 
-def get_files_with_data(path=os.getenv("LOCAL_DATA_PATH")):
+def get_files_with_data(path=os.getenv("WIKI_SYNTHETIC_PATH")):
     all_files = []
     for root, directories, filenames in os.walk(path):
         for filename in filenames:
