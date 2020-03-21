@@ -4,6 +4,7 @@
 .vscode
 .ipynb_checkpoints
 .vector_cache
+results
 
 # STANDARD PYTHON GITIGNORE
 
