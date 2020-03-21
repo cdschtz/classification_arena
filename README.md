@@ -18,5 +18,4 @@ Benchmark different classification methods on the task of detecting syntheticall
 * BERT
 * RoBERTa
 * DistilBERT
-* GPT-2
 * XLNet
