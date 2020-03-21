@@ -43,7 +43,8 @@ def train_model(model, iters, num_epochs, batch_size, loss_fn, optim, test=False
     start_time = datetime.datetime.now()
     time_info = {"start": start_time.isoformat(timespec='seconds')}
 
-    all_train_losses = all_train_accuracies = []
+    all_train_losses = []
+    all_train_accuracies = []
     train_loss = train_acc = test_loss = test_acc = 0.0  # calculated at end of last epoch
     train_iter, val_iter, test_iter = iters
 
@@ -66,7 +67,7 @@ def train_model(model, iters, num_epochs, batch_size, loss_fn, optim, test=False
             loss = loss_fn(prediction, target)
             all_train_losses.append(loss.item())
 
-            num_corrects = (torch.max(prediction, 1)[1].view(target.size()).data == target.data).float().sum()
+            num_corrects = (torch.max(prediction, 1)[1].view(target.size()).data == target.data).sum()
             acc = 100.0 * num_corrects / len(batch)
             all_train_accuracies.append(acc.item())
 
@@ -83,9 +84,9 @@ def train_model(model, iters, num_epochs, batch_size, loss_fn, optim, test=False
         train_loss = total_epoch_loss / len(train_iter)
         train_acc = total_epoch_acc / len(train_iter)
 
-    val_loss, val_acc = evaluate_model(model, val_iter, loss_fn, batch_size)
+    val_loss, val_acc, id_info = evaluate_model(model, val_iter, loss_fn, batch_size)
     if test:
-        test_loss, test_acc = evaluate_model(model, val_iter, loss_fn, batch_size)
+        test_loss, test_acc, test_id_info = evaluate_model(model, val_iter, loss_fn, batch_size)
 
     end_time = datetime.datetime.now()
     time_elapsed = end_time - start_time
@@ -98,10 +99,11 @@ def train_model(model, iters, num_epochs, batch_size, loss_fn, optim, test=False
     acc_info = {"train": train_acc, "val": val_acc, "test": test_acc}
     graph_data = {"losses": all_train_losses, "accuracies": all_train_accuracies}
 
-    return acc_info, loss_info, graph_data, time_info
+    return acc_info, loss_info, graph_data, time_info, id_info
 
 
 def evaluate_model(model, val_iter, loss_fn, batch_size):
+    id_info = {"correct": [], "false": []}
     eval_loss = eval_acc = 0.0
     model.eval()
     with torch.no_grad():
@@ -113,12 +115,20 @@ def evaluate_model(model, val_iter, loss_fn, batch_size):
 
             prediction = model(text)
             loss = loss_fn(prediction, target)
+
+            prediction_results = torch.max(prediction, 1)[1].view(target.size()).data == target.data
+            for i, pr in enumerate(prediction_results):
+                if pr:
+                    id_info["correct"].append({"label": batch.label[i].item(), "id": batch.id[i]})
+                else:
+                    id_info["false"].append({"label": batch.label[i].item(), "id": batch.id[i]})
+
             num_corrects = (torch.max(prediction, 1)[1].view(target.size()).data == target.data).sum()
             acc = 100.0 * num_corrects / len(batch)
             eval_loss += loss.item()
             eval_acc += acc.item()
 
-    return eval_loss / len(val_iter), eval_acc / len(val_iter)
+    return eval_loss / len(val_iter), eval_acc / len(val_iter), id_info
 
 
 def run(model_name='rnn', batch_size=32, learn_rate=1e-3, embedding_fn='glove'):
@@ -145,7 +155,7 @@ def run(model_name='rnn', batch_size=32, learn_rate=1e-3, embedding_fn='glove'):
     loss_function = F.cross_entropy
     learning_rate = learn_rate  # adam default: 1e-3, proposed: 2e-5
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate)
-    acc_info, loss_info, graph_data, time_info = train_model(
+    acc_info, loss_info, graph_data, time_info, id_info = train_model(
         model, iters, num_epochs, batch_size, loss_function, optimizer, verbose=True
     )
     # plot_train_data(losses[::10], accuracies[::10])
@@ -169,7 +179,8 @@ def run(model_name='rnn', batch_size=32, learn_rate=1e-3, embedding_fn='glove'):
         "losses": graph_data['losses'],
         "accuracies": graph_data['accuracies'],
         "device": DEVICE.type,
-        "time_info": time_info
+        "time_info": time_info,
+        "id_info": id_info
     }
     write_results(data_obj)
 
@@ -185,4 +196,4 @@ def run_all():
 
 
 if __name__ == '__main__':
-    run()
+    run(model_name='lstm', batch_size=64, learn_rate=1e-3, embedding_fn='glove')

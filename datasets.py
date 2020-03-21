@@ -3,6 +3,15 @@ from torchtext import data
 from utils import get_files_with_data
 
 
+class MyField(data.RawField):
+
+    def __init__(self):
+        super(MyField, self).__init__()
+
+    def preprocess(self, x):
+        return int(x)
+
+
 class WikiSyntheticGeneral(data.Dataset):
 
     name = 'WikiSyntheticGeneral'
@@ -17,7 +26,8 @@ class WikiSyntheticGeneral(data.Dataset):
 
         extraction_fields = {
             "text": [("text", text_field)],
-            "label": [("label", label_field)]
+            "label": [("label", label_field)],
+            "id": [("id", MyField())]
         }
 
         examples = []
@@ -25,11 +35,13 @@ class WikiSyntheticGeneral(data.Dataset):
             with open(file_name, 'r', encoding='utf-8') as f:
                 for line in f:
                     entry = json.loads(line)
+                    entry['id'] = entry['meta']['id']
                     examples.append(data.Example.fromdict(entry, extraction_fields))
 
         fields = {
             "text": text_field,
-            "label": label_field
+            "label": label_field,
+            "id": MyField()
         }
 
         super(WikiSyntheticGeneral, self).__init__(examples, fields, **kwargs)
