@@ -156,7 +156,7 @@ def run(model_name='rnn', batch_size=32, learn_rate=1e-3, embedding_fn='glove'):
     learning_rate = learn_rate  # adam default: 1e-3, proposed: 2e-5
     optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate)
     acc_info, loss_info, graph_data, time_info, id_info = train_model(
-        model, iters, num_epochs, batch_size, loss_function, optimizer, verbose=True
+        model, iters, num_epochs, batch_size, loss_function, optimizer, verbose=False
     )
     # plot_train_data(losses[::10], accuracies[::10])
 
@@ -196,4 +196,5 @@ def run_all():
 
 
 if __name__ == '__main__':
-    run(model_name='lstm', batch_size=64, learn_rate=1e-3, embedding_fn='glove')
+    run_all()
+

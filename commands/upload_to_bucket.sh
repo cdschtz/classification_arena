@@ -4,4 +4,4 @@
 # gsutil -m rsync -x ".*\.DS_Store$" -r $WIKI_SYNTHETIC_PATH $BUCKET_DATA_PATH
 
 # upload (sync) the result files
-gsutil -m rsync -x ".*\.DS_Store$" -r ./results/ $BUCKET_RESULTS_PATH
+gsutil -m rsync -x ".*\.DS_Store$" -r $LOCAL_RESULTS_PATH $BUCKET_RESULTS_PATH
