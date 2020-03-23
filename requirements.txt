@@ -2,3 +2,7 @@ torch==1.4.0
 tokenizers==0.5.2
 torchtext==0.5.0
 matplotlib==3.1.1
+numpy
+simpletransformers
+pandas
+spacy
